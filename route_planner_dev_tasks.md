@@ -14,7 +14,7 @@
 - [x] Redirect to dashboard after login
 - [x] Save user profile to Firestore on first login
 - [x] Set up auth state context or Redux
-- [ ] Protect routes using private route wrappers
+- [x] Protect routes using private route wrappers
 
 ## 🗂️ Phase 3: Address Book
 

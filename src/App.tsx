@@ -4,6 +4,7 @@ import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import GoogleIcon from '@mui/icons-material/Google'
 import {Link as RouterLink, Route, Routes} from 'react-router-dom'
 import {useAuth} from './auth/AuthContext'
+import PrivateRoute from './routes/PrivateRoute'
 
 function Home() {
     const [count, setCount] = useState(0)
@@ -130,7 +131,9 @@ function App() {
 
             <Routes>
                 <Route path="/" element={<Home/>}/>
-                <Route path="/about" element={<About/>}/>
+                <Route element={<PrivateRoute/>}>
+                    <Route path="/about" element={<About/>}/>
+                </Route>
                 <Route path="*" element={<NotFound/>}/>
             </Routes>
         </Box>
