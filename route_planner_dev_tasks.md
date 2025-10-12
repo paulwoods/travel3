@@ -19,7 +19,7 @@
 ## 🗂️ Phase 3: Address Book
 
 - [x] Create Address form with Google Places autocomplete
-- [ ] Save addresses to Firestore under /users/{uid}/addresses
+- [x] Save addresses to Firestore under /users/{uid}/addresses
 - [ ] List addresses in table or card view
 - [ ] Implement edit and delete actions
 - [ ] Add support for tagging and filters

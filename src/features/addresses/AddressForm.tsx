@@ -1,6 +1,9 @@
 import React, {useState} from 'react'
-import {Box, Button, Grid, Stack, TextField, Typography} from '@mui/material'
+import {Alert, Box, Button, Grid, Stack, TextField, Typography} from '@mui/material'
 import GooglePlacesAutocompleteField, {ParsedPlace} from '../../components/GooglePlacesAutocompleteField'
+import {addDoc, collection, serverTimestamp} from 'firebase/firestore'
+import {db} from '../../firebase'
+import {useAuth} from '../../auth/AuthContext'
 
 export type AddressFormData = {
     address1: string
@@ -32,6 +35,10 @@ const initialData: AddressFormData = {
 
 export default function AddressForm({onSubmit}: { onSubmit?: (data: AddressFormData) => void }) {
     const [data, setData] = useState<AddressFormData>(initialData)
+    const [saving, setSaving] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+    const [success, setSuccess] = useState<string | null>(null)
+    const {user} = useAuth()
 
     const handlePlace = (p: ParsedPlace) => {
         const address1 = [p.streetNumber, p.route].filter(Boolean).join(' ')
@@ -50,12 +57,40 @@ export default function AddressForm({onSubmit}: { onSubmit?: (data: AddressFormD
         }))
     }
 
-    function submit(e: React.FormEvent) {
+    async function submit(e: React.FormEvent) {
         e.preventDefault()
-        onSubmit?.(data)
-        // For now, just log it. Persistence will be implemented in the next task.
-        // eslint-disable-next-line no-console
-        console.log('Address submit:', data)
+        setError(null)
+        setSuccess(null)
+        if (!user) {
+            setError('You must be signed in to save an address.')
+            return
+        }
+        if (!data.address1 && !data.formattedAddress) {
+            setError('Please enter an address or select one from search.')
+            return
+        }
+        try {
+            setSaving(true)
+            const colRef = collection(db, 'users', user.uid, 'addresses')
+            const payload = {
+                ...data,
+                uid: user.uid,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            }
+            const docRef = await addDoc(colRef, payload)
+            setSuccess('Saved!')
+            onSubmit?.(data)
+            // Reset form but keep success message
+            setData(initialData)
+            // eslint-disable-next-line no-console
+            console.log('Address saved with id:', docRef.id)
+        } catch (err) {
+            console.error('Failed to save address', err)
+            setError('Failed to save address. Please try again.')
+        } finally {
+            setSaving(false)
+        }
     }
 
     return (
@@ -67,6 +102,9 @@ export default function AddressForm({onSubmit}: { onSubmit?: (data: AddressFormD
                         Start by searching for an address. You can adjust the fields after selecting.
                     </Typography>
                 </div>
+
+                {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+                {success && <Alert severity="success" onClose={() => setSuccess(null)}>{success}</Alert>}
 
                 <GooglePlacesAutocompleteField label="Search address" onPlaceSelected={handlePlace}/>
 
@@ -138,8 +176,12 @@ export default function AddressForm({onSubmit}: { onSubmit?: (data: AddressFormD
                 </Grid>
 
                 <Stack direction="row" spacing={2}>
-                    <Button type="submit" variant="contained" color="primary">Save</Button>
-                    <Button type="button" variant="outlined" onClick={() => setData(initialData)}>Reset</Button>
+                    <Button type="submit" variant="contained" color="primary" disabled={saving}>
+                        {saving ? 'Saving…' : 'Save'}
+                    </Button>
+                    <Button type="button" variant="outlined" onClick={() => setData(initialData)} disabled={saving}>
+                        Reset
+                    </Button>
                 </Stack>
             </Stack>
         </Box>
