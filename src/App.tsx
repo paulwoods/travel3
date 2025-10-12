@@ -6,6 +6,7 @@ import {Link as RouterLink, Route, Routes} from 'react-router-dom'
 import {useAuth} from './auth/AuthContext'
 import PrivateRoute from './routes/PrivateRoute'
 import AddressForm from './features/addresses/AddressForm'
+import AddressList from './features/addresses/AddressList'
 
 function Home() {
     const [count, setCount] = useState(0)
@@ -127,6 +128,7 @@ function App() {
                 <Stack direction="row" spacing={3} sx={{mb: 2}}>
                     <Link component={RouterLink} to="/">Home</Link>
                     <Link component={RouterLink} to="/about">About</Link>
+                    {user && <Link component={RouterLink} to="/addresses">Addresses</Link>}
                     {user && <Link component={RouterLink} to="/addresses/new">New Address</Link>}
                 </Stack>
             </Container>
@@ -135,6 +137,11 @@ function App() {
                 <Route path="/" element={<Home/>}/>
                 <Route element={<PrivateRoute/>}>
                     <Route path="/about" element={<About/>}/>
+                    <Route path="/addresses" element={
+                        <Container maxWidth="lg" sx={{py: 4}}>
+                            <AddressList/>
+                        </Container>
+                    }/>
                     <Route path="/addresses/new" element={
                         <Container maxWidth="md" sx={{py: 4}}>
                             <AddressForm/>
