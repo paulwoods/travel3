@@ -21,7 +21,7 @@
 - [x] Create Address form with Google Places autocomplete
 - [x] Save addresses to Firestore under /users/{uid}/addresses
 - [x] List addresses in table or card view
-- [ ] Implement edit and delete actions
+- [x] Implement edit and delete actions
 - [ ] Add support for tagging and filters
 - [ ] Add search bar for address filtering
 

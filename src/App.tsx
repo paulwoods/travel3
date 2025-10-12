@@ -7,6 +7,7 @@ import {useAuth} from './auth/AuthContext'
 import PrivateRoute from './routes/PrivateRoute'
 import AddressForm from './features/addresses/AddressForm'
 import AddressList from './features/addresses/AddressList'
+import AddressEdit from './features/addresses/AddressEdit'
 
 function Home() {
     const [count, setCount] = useState(0)
@@ -145,6 +146,11 @@ function App() {
                     <Route path="/addresses/new" element={
                         <Container maxWidth="md" sx={{py: 4}}>
                             <AddressForm/>
+                        </Container>
+                    }/>
+                    <Route path="/addresses/:id/edit" element={
+                        <Container maxWidth="md" sx={{py: 4}}>
+                            <AddressEdit/>
                         </Container>
                     }/>
                 </Route>

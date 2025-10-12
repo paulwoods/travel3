@@ -3,6 +3,7 @@ import {
     Alert,
     Box,
     Card,
+    CardActions,
     CardContent,
     CardHeader,
     Chip,
@@ -24,9 +25,12 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule'
 import TableRowsIcon from '@mui/icons-material/TableRows'
 import PlaceIcon from '@mui/icons-material/Place'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
-import {collection, onSnapshot, orderBy, query, Timestamp} from 'firebase/firestore'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
+import {collection, deleteDoc, doc, onSnapshot, orderBy, query, Timestamp} from 'firebase/firestore'
 import {db} from '../../firebase'
 import {useAuth} from '../../auth/AuthContext'
+import {Link as RouterLink} from 'react-router-dom'
 
 export type AddressDoc = {
     id: string
@@ -54,6 +58,18 @@ export default function AddressList() {
     const [error, setError] = useState<string | null>(null)
     const [view, setView] = useState<ViewMode>('table')
 
+    const handleDelete = async (id: string) => {
+        if (!user) return
+        const confirmDelete = window.confirm('Delete this address? This action cannot be undone.')
+        if (!confirmDelete) return
+        try {
+            await deleteDoc(doc(db, 'users', user.uid, 'addresses', id))
+        } catch (e) {
+            console.error('Failed to delete address', e)
+            setError('Failed to delete address. Please try again.')
+        }
+    }
+
     useEffect(() => {
         if (!user) return
         setLoading(true)
@@ -79,8 +95,8 @@ export default function AddressList() {
     const empty = !loading && rows.length === 0
 
     const content = useMemo(() => {
-        if (view === 'table') return <TableView rows={rows}/>
-        return <CardGridView rows={rows}/>
+        if (view === 'table') return <TableView rows={rows} onDelete={handleDelete}/>
+        return <CardGridView rows={rows} onDelete={handleDelete}/>
     }, [view, rows])
 
     return (
@@ -117,7 +133,7 @@ export default function AddressList() {
     )
 }
 
-function TableView({rows}: { rows: AddressDoc[] }) {
+function TableView({rows, onDelete}: { rows: AddressDoc[], onDelete: (id: string) => void }) {
     return (
         <TableContainer>
             <Table size="small">
@@ -130,6 +146,7 @@ function TableView({rows}: { rows: AddressDoc[] }) {
                         <TableCell>Postal</TableCell>
                         <TableCell>Country</TableCell>
                         <TableCell align="right">Created</TableCell>
+                        <TableCell align="right">Actions</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
@@ -142,6 +159,25 @@ function TableView({rows}: { rows: AddressDoc[] }) {
                             <TableCell>{r.postalCode || '-'}</TableCell>
                             <TableCell>{r.country || '-'}</TableCell>
                             <TableCell align="right">{formatTs(r.createdAt)}</TableCell>
+                            <TableCell align="right">
+                                <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                    <IconButton
+                                        size="small"
+                                        aria-label="Edit"
+                                        component={RouterLink}
+                                        to={`/addresses/${r.id}/edit`}
+                                    >
+                                        <EditIcon fontSize="small"/>
+                                    </IconButton>
+                                    <IconButton
+                                        size="small"
+                                        aria-label="Delete"
+                                        onClick={() => onDelete(r.id)}
+                                    >
+                                        <DeleteIcon fontSize="small"/>
+                                    </IconButton>
+                                </Stack>
+                            </TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
@@ -150,7 +186,7 @@ function TableView({rows}: { rows: AddressDoc[] }) {
     )
 }
 
-function CardGridView({rows}: { rows: AddressDoc[] }) {
+function CardGridView({rows, onDelete}: { rows: AddressDoc[], onDelete: (id: string) => void }) {
     return (
         <Grid container spacing={2}>
             {rows.map((r) => (
@@ -184,6 +220,23 @@ function CardGridView({rows}: { rows: AddressDoc[] }) {
                                 </Stack>
                             </Stack>
                         </CardContent>
+                        <CardActions sx={{justifyContent: 'flex-end'}}>
+                            <IconButton
+                                size="small"
+                                aria-label="Edit"
+                                component={RouterLink}
+                                to={`/addresses/${r.id}/edit`}
+                            >
+                                <EditIcon fontSize="small"/>
+                            </IconButton>
+                            <IconButton
+                                size="small"
+                                aria-label="Delete"
+                                onClick={() => onDelete(r.id)}
+                            >
+                                <DeleteIcon fontSize="small"/>
+                            </IconButton>
+                        </CardActions>
                     </Card>
                 </Grid>
             ))}
