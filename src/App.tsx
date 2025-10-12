@@ -1,10 +1,11 @@
-import {useEffect, useState} from 'react'
+import {useEffect, useRef, useState} from 'react'
 import {AppBar, Avatar, Box, Button, Chip, Container, Link, Stack, TextField, Toolbar, Typography,} from '@mui/material'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import GoogleIcon from '@mui/icons-material/Google'
 import {Link as RouterLink, Route, Routes} from 'react-router-dom'
 import {onAuthStateChanged, signInWithPopup, signOut, User} from 'firebase/auth'
-import {auth, googleProvider} from './firebase'
+import {auth, db, googleProvider} from './firebase'
+import {doc, getDoc, serverTimestamp, setDoc} from 'firebase/firestore'
 
 function Home() {
     const [count, setCount] = useState(0)
@@ -73,9 +74,40 @@ function NotFound() {
 
 function App() {
     const [user, setUser] = useState<User | null>(null)
+    const lastProcessedUidRef = useRef<string | null>(null)
+
+    async function ensureUserProfile(u: User) {
+        try {
+            const userRef = doc(db, 'users', u.uid)
+            const snap = await getDoc(userRef)
+            if (!snap.exists()) {
+                const providerIds = (u.providerData || []).map((p) => p?.providerId).filter(Boolean)
+                await setDoc(userRef, {
+                    uid: u.uid,
+                    displayName: u.displayName ?? null,
+                    email: u.email ?? null,
+                    photoURL: u.photoURL ?? null,
+                    providerIds,
+                    createdAt: serverTimestamp(),
+                    lastLoginAt: serverTimestamp(),
+                })
+            } else {
+                // Update lastLoginAt on subsequent logins
+                await setDoc(userRef, {lastLoginAt: serverTimestamp()}, {merge: true})
+            }
+        } catch (e) {
+            console.error('Failed to ensure user profile in Firestore', e)
+        }
+    }
 
     useEffect(() => {
-        const unsub = onAuthStateChanged(auth, (u) => setUser(u))
+        const unsub = onAuthStateChanged(auth, async (u) => {
+            setUser(u)
+            if (u && lastProcessedUidRef.current !== u.uid) {
+                lastProcessedUidRef.current = u.uid
+                await ensureUserProfile(u)
+            }
+        })
         return () => unsub()
     }, [])
 

@@ -11,8 +11,8 @@
 ## 🔐 Phase 2: Authentication & User Flow
 
 - [x] Implement Google Login via Firebase Auth
-- [ ] Redirect to dashboard after login
-- [ ] Save user profile to Firestore on first login
+- [x] Redirect to dashboard after login
+- [x] Save user profile to Firestore on first login
 - [ ] Set up auth state context or Redux
 - [ ] Protect routes using private route wrappers
 

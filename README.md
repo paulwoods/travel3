@@ -209,3 +209,18 @@ Troubleshooting:
 
 - If the popup is blocked, allow popups for localhost.
 - If you see "This domain is not authorized", verify the authorized domains and the `VITE_FIREBASE_AUTH_DOMAIN`.
+
+---
+
+## Firestore User Profile on First Login
+
+When a user signs in with Google, the app ensures a profile document exists at `users/{uid}` in Firestore.
+
+- On first login: a new document is created with fields: `uid`, `displayName`, `email`, `photoURL`, `providerIds`,
+  `createdAt`, and `lastLoginAt` (timestamps are server-side via `serverTimestamp()`).
+- On subsequent logins: `lastLoginAt` is updated.
+
+Security: Firestore rules restrict read/write so users can only access their own user document and subcollections (see
+`firestore.rules`).
+
+Note: Make sure Firestore is enabled in your Firebase project and your `.env` contains your Firebase Web configuration.
