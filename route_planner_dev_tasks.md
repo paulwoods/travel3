@@ -5,7 +5,7 @@
 - [x] Initialize React project (Vite or CRA)
 - [x] Install Material UI and configure theme
 - [x] Install react-router-dom and set up routing
-- [ ] Initialize Firebase project (Auth, Firestore, Hosting)
+- [x] Initialize Firebase project (Auth, Firestore, Hosting)
 - [ ] Set up Firebase Functions (Node.js)
 
 ## 🔐 Phase 2: Authentication & User Flow
