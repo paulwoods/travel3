@@ -129,3 +129,62 @@ import {auth, db, googleProvider} from './src/firebase'
 ```
 
 Auth, Firestore, and the Firebase App are initialized from Vite env vars.
+
+
+---
+
+## Firebase Functions (Node.js)
+
+Cloud Functions have been set up in the `functions/` directory using Node.js (runtime nodejs20) and TypeScript.
+
+Contents:
+
+- `functions/src/index.ts` – exports two functions:
+    - `hello` (HTTP onRequest) for sanity checks
+    - `optimizeRoute` (callable) – a stub to be implemented in Phase 4
+- TypeScript compiles to `functions/lib/`.
+
+Prerequisites:
+
+- Install Firebase CLI: `npm i -g firebase-tools`
+- Log in and select your project: `firebase login` and `firebase use <your-project-id>`
+
+Install and build functions:
+
+```bash
+cd functions
+npm install
+npm run build
+```
+
+Run emulators (from repo root):
+
+```bash
+npm run emulators
+```
+
+This will emulate Hosting, Firestore (if configured), and Functions. The `hello` endpoint will be available at a local
+Functions URL printed in the console.
+
+Deploy Functions:
+
+```bash
+npm run deploy:functions
+```
+
+Client usage example (callable):
+
+```ts
+import {getFunctions, httpsCallable} from "firebase/functions";
+import {app} from "./src/firebase"; // ensure app is initialized
+
+const functions = getFunctions(app);
+const optimizeRoute = httpsCallable(functions, "optimizeRoute");
+const res = await optimizeRoute({stops: ["A", "B"]});
+console.log(res.data);
+```
+
+Notes:
+
+- `optimizeRoute` is a placeholder and does not call external APIs yet.
+- Set any required API keys as environment config or secrets before implementing real logic.
