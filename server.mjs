@@ -9,7 +9,7 @@ const __dirname = normalize(join(__filename, '..'))
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000
 
 // Very small static server that serves files from project root.
-// Defaults to index.html for '/'.
+// Defaults to index.html for '/'. Adds SPA fallback to index.html for unknown routes.
 const server = http.createServer(async (req, res) => {
   try {
     if (!req.url) {
@@ -23,12 +23,20 @@ const server = http.createServer(async (req, res) => {
     let safePath = urlPath.replace(/\\/g, '/').replace(/\.\.+/g, '')
     if (safePath === '/') safePath = '/index.html'
 
-    const filePath = join(__dirname, safePath.startsWith('/') ? `.${safePath}` : safePath)
+    let filePath = join(__dirname, safePath.startsWith('/') ? `.${safePath}` : safePath)
 
     if (!existsSync(filePath)) {
-      res.writeHead(404)
-      res.end('Not Found')
-      return
+      // SPA fallback: serve index.html so client-side router can handle the route
+      const indexPath = join(__dirname, './index.html')
+      if (existsSync(indexPath)) {
+        res.writeHead(200, {'Content-Type': 'text/html; charset=utf-8'})
+        createReadStream(indexPath).pipe(res)
+        return
+      } else {
+        res.writeHead(404)
+        res.end('Not Found')
+        return
+      }
     }
 
     const type = contentType(filePath)
