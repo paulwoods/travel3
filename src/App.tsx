@@ -1,11 +1,9 @@
-import {useEffect, useRef, useState} from 'react'
+import {useState} from 'react'
 import {AppBar, Avatar, Box, Button, Chip, Container, Link, Stack, TextField, Toolbar, Typography,} from '@mui/material'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
 import GoogleIcon from '@mui/icons-material/Google'
 import {Link as RouterLink, Route, Routes} from 'react-router-dom'
-import {onAuthStateChanged, signInWithPopup, signOut, User} from 'firebase/auth'
-import {auth, db, googleProvider} from './firebase'
-import {doc, getDoc, serverTimestamp, setDoc} from 'firebase/firestore'
+import {useAuth} from './auth/AuthContext'
 
 function Home() {
     const [count, setCount] = useState(0)
@@ -73,49 +71,11 @@ function NotFound() {
 }
 
 function App() {
-    const [user, setUser] = useState<User | null>(null)
-    const lastProcessedUidRef = useRef<string | null>(null)
-
-    async function ensureUserProfile(u: User) {
-        try {
-            const userRef = doc(db, 'users', u.uid)
-            const snap = await getDoc(userRef)
-            if (!snap.exists()) {
-                const providerIds = (u.providerData || []).map((p) => p?.providerId).filter(Boolean)
-                await setDoc(userRef, {
-                    uid: u.uid,
-                    displayName: u.displayName ?? null,
-                    email: u.email ?? null,
-                    photoURL: u.photoURL ?? null,
-                    providerIds,
-                    createdAt: serverTimestamp(),
-                    lastLoginAt: serverTimestamp(),
-                })
-            } else {
-                // Update lastLoginAt on subsequent logins
-                await setDoc(userRef, {lastLoginAt: serverTimestamp()}, {merge: true})
-            }
-        } catch (e) {
-            console.error('Failed to ensure user profile in Firestore', e)
-        }
-    }
-
-    useEffect(() => {
-        const unsub = onAuthStateChanged(auth, async (u) => {
-            setUser(u)
-            if (u && lastProcessedUidRef.current !== u.uid) {
-                lastProcessedUidRef.current = u.uid
-                await ensureUserProfile(u)
-            }
-        })
-        return () => unsub()
-    }, [])
+    const {user, loading, signInWithGoogle, signOut} = useAuth()
 
     async function handleSignIn() {
         try {
-            // Ask user to pick an account each time
-            googleProvider.setCustomParameters({prompt: 'select_account'})
-            await signInWithPopup(auth, googleProvider)
+            await signInWithGoogle()
         } catch (e) {
             console.error('Sign-in failed', e)
             alert('Google sign-in failed. Check console for details.')
@@ -124,7 +84,7 @@ function App() {
 
     async function handleSignOut() {
         try {
-            await signOut(auth)
+            await signOut()
         } catch (e) {
             console.error('Sign-out failed', e)
             alert('Sign-out failed. Check console for details.')
@@ -152,8 +112,8 @@ function App() {
                             </>
                         ) : (
                             <Button variant="contained" color="primary" startIcon={<GoogleIcon/>}
-                                    onClick={handleSignIn}>
-                                Sign in with Google
+                                    onClick={handleSignIn} disabled={loading}>
+                                {loading ? 'Loading…' : 'Sign in with Google'}
                             </Button>
                         )}
                         <Chip color="success" label="alpha" size="small"/>

@@ -13,7 +13,7 @@
 - [x] Implement Google Login via Firebase Auth
 - [x] Redirect to dashboard after login
 - [x] Save user profile to Firestore on first login
-- [ ] Set up auth state context or Redux
+- [x] Set up auth state context or Redux
 - [ ] Protect routes using private route wrappers
 
 ## 🗂️ Phase 3: Address Book
