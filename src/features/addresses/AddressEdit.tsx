@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react'
-import {Alert, Box, Button, Grid, Stack, TextField, Typography} from '@mui/material'
+import {Alert, Autocomplete, Box, Button, Chip, Grid, Stack, TextField, Typography} from '@mui/material'
 import GooglePlacesAutocompleteField, {ParsedPlace} from '../../components/GooglePlacesAutocompleteField'
 import {doc, getDoc, serverTimestamp, updateDoc} from 'firebase/firestore'
 import {db} from '../../firebase'
@@ -18,6 +18,7 @@ export type AddressEditData = {
     placeId: string | null
     formattedAddress: string | null
     name: string | null
+    tags: string[]
 }
 
 const emptyData: AddressEditData = {
@@ -32,6 +33,7 @@ const emptyData: AddressEditData = {
     placeId: null,
     formattedAddress: null,
     name: null,
+    tags: [],
 }
 
 export default function AddressEdit() {
@@ -70,6 +72,7 @@ export default function AddressEdit() {
                     placeId: d.placeId ?? null,
                     formattedAddress: d.formattedAddress ?? null,
                     name: d.name ?? null,
+                    tags: Array.isArray(d.tags) ? d.tags.filter((t: any) => typeof t === 'string') : [],
                 })
             } catch (e) {
                 console.error('Failed to load address', e)
@@ -211,6 +214,27 @@ export default function AddressEdit() {
                         />
                     </Grid>
                 </Grid>
+
+                <Autocomplete
+                    multiple
+                    freeSolo
+                    options={[]}
+                    value={data.tags}
+                    onChange={(_, value) => setData({
+                        ...data,
+                        tags: (value || []).map(v => (typeof v === 'string' ? v.trim() : '')).filter(Boolean)
+                    })}
+                    renderTags={(value: readonly string[], getTagProps) =>
+                        value.map((option: string, index: number) => (
+                            <Chip variant="outlined" color="success" label={option} {...getTagProps({index})}
+                                  key={option + index}/>
+                        ))
+                    }
+                    renderInput={(params) => (
+                        <TextField {...params} label="Tags" placeholder="Add a tag and press Enter"
+                                   helperText="Use tags to organize and filter addresses"/>
+                    )}
+                />
 
                 <Stack direction="row" spacing={2}>
                     <Button type="submit" variant="contained" color="primary" disabled={saving}>

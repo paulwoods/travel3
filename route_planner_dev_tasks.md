@@ -22,7 +22,7 @@
 - [x] Save addresses to Firestore under /users/{uid}/addresses
 - [x] List addresses in table or card view
 - [x] Implement edit and delete actions
-- [ ] Add support for tagging and filters
+- [x] Add support for tagging and filters
 - [ ] Add search bar for address filtering
 
 ## 🛣️ Phase 4: Route Planner

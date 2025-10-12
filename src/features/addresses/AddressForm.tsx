@@ -1,5 +1,5 @@
 import React, {useState} from 'react'
-import {Alert, Box, Button, Grid, Stack, TextField, Typography} from '@mui/material'
+import {Alert, Autocomplete, Box, Button, Chip, Grid, Stack, TextField, Typography} from '@mui/material'
 import GooglePlacesAutocompleteField, {ParsedPlace} from '../../components/GooglePlacesAutocompleteField'
 import {addDoc, collection, serverTimestamp} from 'firebase/firestore'
 import {db} from '../../firebase'
@@ -17,6 +17,7 @@ export type AddressFormData = {
     placeId: string | null
     formattedAddress: string | null
     name: string | null
+    tags: string[]
 }
 
 const initialData: AddressFormData = {
@@ -31,6 +32,7 @@ const initialData: AddressFormData = {
     placeId: null,
     formattedAddress: null,
     name: null,
+    tags: [],
 }
 
 export default function AddressForm({onSubmit}: { onSubmit?: (data: AddressFormData) => void }) {
@@ -174,6 +176,27 @@ export default function AddressForm({onSubmit}: { onSubmit?: (data: AddressFormD
                         />
                     </Grid>
                 </Grid>
+
+                <Autocomplete
+                    multiple
+                    freeSolo
+                    options={[]}
+                    value={data.tags}
+                    onChange={(_, value) => setData({
+                        ...data,
+                        tags: (value || []).map(v => (typeof v === 'string' ? v.trim() : '')).filter(Boolean)
+                    })}
+                    renderTags={(value: readonly string[], getTagProps) =>
+                        value.map((option: string, index: number) => (
+                            <Chip variant="outlined" color="success" label={option} {...getTagProps({index})}
+                                  key={option + index}/>
+                        ))
+                    }
+                    renderInput={(params) => (
+                        <TextField {...params} label="Tags" placeholder="Add a tag and press Enter"
+                                   helperText="Use tags to organize and filter addresses"/>
+                    )}
+                />
 
                 <Stack direction="row" spacing={2}>
                     <Button type="submit" variant="contained" color="primary" disabled={saving}>

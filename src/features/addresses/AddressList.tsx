@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react'
 import {
     Alert,
+    Autocomplete,
     Box,
     Card,
     CardActions,
@@ -16,6 +17,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TextField,
     ToggleButton,
     ToggleButtonGroup,
     Tooltip,
@@ -47,6 +49,7 @@ export type AddressDoc = {
     name?: string | null
     createdAt?: Timestamp | null
     updatedAt?: Timestamp | null
+    tags?: string[]
 }
 
 type ViewMode = 'table' | 'cards'
@@ -57,6 +60,7 @@ export default function AddressList() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [view, setView] = useState<ViewMode>('table')
+    const [selectedTags, setSelectedTags] = useState<string[]>([])
 
     const handleDelete = async (id: string) => {
         if (!user) return
@@ -94,10 +98,27 @@ export default function AddressList() {
 
     const empty = !loading && rows.length === 0
 
+    const allTags = useMemo(() => {
+        const set = new Set<string>()
+        for (const r of rows) {
+            const tags = (r.tags || []).filter((t) => typeof t === 'string' && t.trim())
+            tags.forEach((t) => set.add(t))
+        }
+        return Array.from(set).sort((a, b) => a.localeCompare(b))
+    }, [rows])
+
+    const filteredRows = useMemo(() => {
+        if (!selectedTags.length) return rows
+        return rows.filter((r) => {
+            const tags = r.tags || []
+            return selectedTags.every((t) => tags.includes(t))
+        })
+    }, [rows, selectedTags])
+
     const content = useMemo(() => {
-        if (view === 'table') return <TableView rows={rows} onDelete={handleDelete}/>
-        return <CardGridView rows={rows} onDelete={handleDelete}/>
-    }, [view, rows])
+        if (view === 'table') return <TableView rows={filteredRows} onDelete={handleDelete}/>
+        return <CardGridView rows={filteredRows} onDelete={handleDelete}/>
+    }, [view, filteredRows])
 
     return (
         <Stack spacing={2}>
@@ -117,6 +138,17 @@ export default function AddressList() {
                     </ToggleButton>
                 </ToggleButtonGroup>
             </Stack>
+
+            <Autocomplete
+                multiple
+                options={allTags}
+                value={selectedTags}
+                onChange={(_, value) => setSelectedTags(value)}
+                renderInput={(params) => (
+                    <TextField {...params} label="Filter by tags" placeholder="Select tags"
+                               helperText={selectedTags.length ? `Filtering by ${selectedTags.join(', ')}` : 'Pick one or more tags to filter'}/>
+                )}
+            />
 
             {loading && (
                 <Alert severity="info">Loading addresses…</Alert>
@@ -145,6 +177,7 @@ function TableView({rows, onDelete}: { rows: AddressDoc[], onDelete: (id: string
                         <TableCell>State</TableCell>
                         <TableCell>Postal</TableCell>
                         <TableCell>Country</TableCell>
+                        <TableCell>Tags</TableCell>
                         <TableCell align="right">Created</TableCell>
                         <TableCell align="right">Actions</TableCell>
                     </TableRow>
@@ -158,6 +191,16 @@ function TableView({rows, onDelete}: { rows: AddressDoc[], onDelete: (id: string
                             <TableCell>{r.state || '-'}</TableCell>
                             <TableCell>{r.postalCode || '-'}</TableCell>
                             <TableCell>{r.country || '-'}</TableCell>
+                            <TableCell>
+                                <Stack direction="row" spacing={0.5} useFlexGap flexWrap="wrap">
+                                    {(r.tags || []).slice(0, 4).map((t, idx) => (
+                                        <Chip key={t + idx} label={t} size="small" color="success" variant="outlined"/>
+                                    ))}
+                                    {(r.tags && r.tags.length > 4) && (
+                                        <Chip label={`+${r.tags.length - 4}`} size="small"/>
+                                    )}
+                                </Stack>
+                            </TableCell>
                             <TableCell align="right">{formatTs(r.createdAt)}</TableCell>
                             <TableCell align="right">
                                 <Stack direction="row" spacing={1} justifyContent="flex-end">
@@ -214,9 +257,12 @@ function CardGridView({rows, onDelete}: { rows: AddressDoc[], onDelete: (id: str
                                 <Typography variant="body2" color="text.secondary">
                                     {[r.city, r.state, r.postalCode].filter(Boolean).join(', ') || '-'}
                                 </Typography>
-                                <Stack direction="row" spacing={1} sx={{mt: 1}}>
+                                <Stack direction="row" spacing={1} sx={{mt: 1}} useFlexGap flexWrap="wrap">
                                     {r.country && <Chip label={r.country} size="small"/>}
                                     {r.placeId && <Chip label="Places" size="small" color="secondary"/>}
+                                    {(r.tags || []).map((t, idx) => (
+                                        <Chip key={t + idx} label={t} size="small" color="success" variant="outlined"/>
+                                    ))}
                                 </Stack>
                             </Stack>
                         </CardContent>
