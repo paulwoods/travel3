@@ -191,6 +191,31 @@ Notes:
 
 ---
 
+## Address Form with Google Places Autocomplete
+
+The app includes a protected page to add a new address with Google Places Autocomplete.
+
+- Route: /addresses/new (visible after signing in)
+- The address search uses the Google Maps JavaScript API (Places library) loaded at runtime.
+
+Setup:
+
+1) Enable the Places API for your Google Cloud project.
+2) Create a Maps API key and restrict it to HTTP referrers for your dev/production domains.
+3) Add the key to your .env as:
+
+```
+VITE_GOOGLE_MAPS_API_KEY=your_key_here
+```
+
+4) Restart the dev server after changing env variables.
+
+Notes:
+
+- The form parses the selected place into address fields (street, city, state, postal code, country) and
+  latitude/longitude.
+- The Save button currently logs the data; saving to Firestore will be implemented in the next task.
+
 ## Google Login (Firebase Auth)
 
 This app includes Google Sign-In using Firebase Authentication.

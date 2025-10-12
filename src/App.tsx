@@ -5,6 +5,7 @@ import GoogleIcon from '@mui/icons-material/Google'
 import {Link as RouterLink, Route, Routes} from 'react-router-dom'
 import {useAuth} from './auth/AuthContext'
 import PrivateRoute from './routes/PrivateRoute'
+import AddressForm from './features/addresses/AddressForm'
 
 function Home() {
     const [count, setCount] = useState(0)
@@ -126,6 +127,7 @@ function App() {
                 <Stack direction="row" spacing={3} sx={{mb: 2}}>
                     <Link component={RouterLink} to="/">Home</Link>
                     <Link component={RouterLink} to="/about">About</Link>
+                    {user && <Link component={RouterLink} to="/addresses/new">New Address</Link>}
                 </Stack>
             </Container>
 
@@ -133,6 +135,11 @@ function App() {
                 <Route path="/" element={<Home/>}/>
                 <Route element={<PrivateRoute/>}>
                     <Route path="/about" element={<About/>}/>
+                    <Route path="/addresses/new" element={
+                        <Container maxWidth="md" sx={{py: 4}}>
+                            <AddressForm/>
+                        </Container>
+                    }/>
                 </Route>
                 <Route path="*" element={<NotFound/>}/>
             </Routes>
