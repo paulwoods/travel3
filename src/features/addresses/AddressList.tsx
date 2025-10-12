@@ -10,6 +10,7 @@ import {
     Chip,
     Grid,
     IconButton,
+    InputAdornment,
     Stack,
     Table,
     TableBody,
@@ -29,6 +30,7 @@ import PlaceIcon from '@mui/icons-material/Place'
 import AccessTimeIcon from '@mui/icons-material/AccessTime'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
+import SearchIcon from '@mui/icons-material/Search'
 import {collection, deleteDoc, doc, onSnapshot, orderBy, query, Timestamp} from 'firebase/firestore'
 import {db} from '../../firebase'
 import {useAuth} from '../../auth/AuthContext'
@@ -61,6 +63,7 @@ export default function AddressList() {
     const [error, setError] = useState<string | null>(null)
     const [view, setView] = useState<ViewMode>('table')
     const [selectedTags, setSelectedTags] = useState<string[]>([])
+    const [searchText, setSearchText] = useState<string>('')
 
     const handleDelete = async (id: string) => {
         if (!user) return
@@ -108,12 +111,31 @@ export default function AddressList() {
     }, [rows])
 
     const filteredRows = useMemo(() => {
-        if (!selectedTags.length) return rows
-        return rows.filter((r) => {
-            const tags = r.tags || []
-            return selectedTags.every((t) => tags.includes(t))
+        let base = rows
+        // Tag filter (AND logic)
+        if (selectedTags.length) {
+            base = base.filter((r) => {
+                const tags = r.tags || []
+                return selectedTags.every((t) => tags.includes(t))
+            })
+        }
+        // Text query filter
+        const q = searchText.trim().toLowerCase()
+        if (!q) return base
+        const includesQ = (s?: string | null) => (s ?? '').toLowerCase().includes(q)
+        return base.filter((r) => {
+            if (includesQ(r.name)) return true
+            if (includesQ(r.formattedAddress)) return true
+            if (includesQ(r.address1)) return true
+            if (includesQ(r.city)) return true
+            if (includesQ(r.state)) return true
+            if (includesQ(r.postalCode)) return true
+            if (includesQ(r.country)) return true
+            // Search tags
+            const tags = (r.tags || []).map((t) => (t || '').toLowerCase())
+            return tags.some((t) => t.includes(q))
         })
-    }, [rows, selectedTags])
+    }, [rows, selectedTags, searchText])
 
     const content = useMemo(() => {
         if (view === 'table') return <TableView rows={filteredRows} onDelete={handleDelete}/>
@@ -139,16 +161,35 @@ export default function AddressList() {
                 </ToggleButtonGroup>
             </Stack>
 
-            <Autocomplete
-                multiple
-                options={allTags}
-                value={selectedTags}
-                onChange={(_, value) => setSelectedTags(value)}
-                renderInput={(params) => (
-                    <TextField {...params} label="Filter by tags" placeholder="Select tags"
-                               helperText={selectedTags.length ? `Filtering by ${selectedTags.join(', ')}` : 'Pick one or more tags to filter'}/>
-                )}
-            />
+            <Stack direction={{xs: 'column', sm: 'row'}} spacing={2} alignItems={{xs: 'stretch', sm: 'center'}}>
+                <TextField
+                    fullWidth
+                    label="Search addresses"
+                    placeholder="Search by name, address, city, tag…"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon fontSize="small"/>
+                            </InputAdornment>
+                        ),
+                    }}
+                    helperText={searchText ? `Filtering by text: "${searchText}"` : 'Type to search your addresses'}
+                />
+
+                <Autocomplete
+                    multiple
+                    options={allTags}
+                    value={selectedTags}
+                    onChange={(_, value) => setSelectedTags(value)}
+                    renderInput={(params) => (
+                        <TextField {...params} label="Filter by tags" placeholder="Select tags"
+                                   helperText={selectedTags.length ? `Filtering by ${selectedTags.join(', ')}` : 'Pick one or more tags to filter'}/>
+                    )}
+                    sx={{minWidth: {xs: '100%', sm: 280}}}
+                />
+            </Stack>
 
             {loading && (
                 <Alert severity="info">Loading addresses…</Alert>

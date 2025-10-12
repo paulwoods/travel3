@@ -23,7 +23,7 @@
 - [x] List addresses in table or card view
 - [x] Implement edit and delete actions
 - [x] Add support for tagging and filters
-- [ ] Add search bar for address filtering
+- [x] Add search bar for address filtering
 
 ## 🛣️ Phase 4: Route Planner
 
