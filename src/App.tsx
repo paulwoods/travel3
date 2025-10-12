@@ -1,7 +1,10 @@
-import {useState} from 'react'
-import {AppBar, Box, Button, Chip, Container, Link, Stack, TextField, Toolbar, Typography,} from '@mui/material'
+import {useEffect, useState} from 'react'
+import {AppBar, Avatar, Box, Button, Chip, Container, Link, Stack, TextField, Toolbar, Typography,} from '@mui/material'
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome'
+import GoogleIcon from '@mui/icons-material/Google'
 import {Link as RouterLink, Route, Routes} from 'react-router-dom'
+import {onAuthStateChanged, signInWithPopup, signOut, User} from 'firebase/auth'
+import {auth, googleProvider} from './firebase'
 
 function Home() {
     const [count, setCount] = useState(0)
@@ -69,6 +72,33 @@ function NotFound() {
 }
 
 function App() {
+    const [user, setUser] = useState<User | null>(null)
+
+    useEffect(() => {
+        const unsub = onAuthStateChanged(auth, (u) => setUser(u))
+        return () => unsub()
+    }, [])
+
+    async function handleSignIn() {
+        try {
+            // Ask user to pick an account each time
+            googleProvider.setCustomParameters({prompt: 'select_account'})
+            await signInWithPopup(auth, googleProvider)
+        } catch (e) {
+            console.error('Sign-in failed', e)
+            alert('Google sign-in failed. Check console for details.')
+        }
+    }
+
+    async function handleSignOut() {
+        try {
+            await signOut(auth)
+        } catch (e) {
+            console.error('Sign-out failed', e)
+            alert('Sign-out failed. Check console for details.')
+        }
+    }
+
     return (
         <Box>
             <AppBar position="sticky" color="transparent" enableColorOnDark>
@@ -78,7 +108,22 @@ function App() {
                     <Typography variant="h6" sx={{flexGrow: 1, fontWeight: 800}}>
                         Dark Neon UI
                     </Typography>
-                    <Stack direction="row" spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                        {user ? (
+                            <>
+                                <Stack direction="row" spacing={1} alignItems="center" sx={{mr: 1}}>
+                                    <Avatar src={user.photoURL ?? undefined} alt={user.displayName ?? undefined}
+                                            sx={{width: 28, height: 28}}/>
+                                    <Typography variant="body2">{user.displayName || user.email}</Typography>
+                                </Stack>
+                                <Button variant="outlined" color="inherit" onClick={handleSignOut}>Sign out</Button>
+                            </>
+                        ) : (
+                            <Button variant="contained" color="primary" startIcon={<GoogleIcon/>}
+                                    onClick={handleSignIn}>
+                                Sign in with Google
+                            </Button>
+                        )}
                         <Chip color="success" label="alpha" size="small"/>
                     </Stack>
                 </Toolbar>

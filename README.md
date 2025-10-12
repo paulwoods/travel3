@@ -188,3 +188,24 @@ Notes:
 
 - `optimizeRoute` is a placeholder and does not call external APIs yet.
 - Set any required API keys as environment config or secrets before implementing real logic.
+
+---
+
+## Google Login (Firebase Auth)
+
+This app includes Google Sign-In using Firebase Authentication.
+
+Setup steps:
+
+1) In Firebase Console > Authentication > Sign-in method, enable the Google provider.
+2) Add your authorized domains (e.g., localhost and your hosting domain). For local development:
+    - localhost:5173 (Vite dev server)
+    - localhost:3000 (Node server via `npm start`)
+3) Ensure your .env contains your Firebase Web app config (see section above) and restart the dev server after editing.
+4) Run the app and click "Sign in with Google" in the top bar. Once signed in, your avatar and name will be shown, and
+   you can sign out.
+
+Troubleshooting:
+
+- If the popup is blocked, allow popups for localhost.
+- If you see "This domain is not authorized", verify the authorized domains and the `VITE_FIREBASE_AUTH_DOMAIN`.
