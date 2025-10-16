@@ -27,7 +27,7 @@
 
 ## 🛣️ Phase 4: Route Planner
 
-- [ ] UI to select saved or new addresses
+- [x] UI to select saved or new addresses
 - [ ] Drag-and-drop stops list using react-beautiful-dnd
 - [ ] Implement Optimize Route button
 - [ ] Create Firebase Function to call Google Directions API

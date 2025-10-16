@@ -22,6 +22,7 @@ import PrivateRoute from './routes/PrivateRoute'
 import AddressForm from './features/addresses/AddressForm'
 import AddressList from './features/addresses/AddressList'
 import AddressEdit from './features/addresses/AddressEdit'
+import RoutePlanner from './features/planner/RoutePlanner'
 
 function Home() {
     const {user, loading, signInWithGoogle} = useAuth()
@@ -240,6 +241,7 @@ function App() {
                     <Link component={RouterLink} to="/about">About</Link>
                     {user && <Link component={RouterLink} to="/addresses">Addresses</Link>}
                     {user && <Link component={RouterLink} to="/addresses/new">New Address</Link>}
+                    {user && <Link component={RouterLink} to="/planner">Planner</Link>}
                 </Stack>
             </Container>
 
@@ -260,6 +262,11 @@ function App() {
                     <Route path="/addresses/:id/edit" element={
                         <Container maxWidth="md" sx={{py: 4}}>
                             <AddressEdit/>
+                        </Container>
+                    }/>
+                    <Route path="/planner" element={
+                        <Container maxWidth="md" sx={{py: 4}}>
+                            <RoutePlanner/>
                         </Container>
                     }/>
                 </Route>
